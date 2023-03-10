@@ -3,6 +3,7 @@
 media_file="${args[media_file]}"
 model_file="ggml-$(config_get model).bin"
 
+check_media "${media_file}"
 check_media_type "${media_file}"
 extract_audio "${media_file}"
 check_models "${model_file}"

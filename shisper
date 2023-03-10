@@ -18,11 +18,11 @@ version_command() {
 # :command.usage
 shisper_usage() {
   if [[ -n $long_usage ]]; then
-    printf "shisper - A quick & dirty script to generate subs for your multimedia files.\n"
+    printf "shisper - A quick & dirty script to generate subs and transcriptions for your multimedia files.\n"
     echo
 
   else
-    printf "shisper - A quick & dirty script to generate subs for your multimedia files.\n"
+    printf "shisper - A quick & dirty script to generate subs and transcriptions for your multimedia files.\n"
     echo
 
   fi
@@ -35,8 +35,9 @@ shisper_usage() {
   # :command.usage_commands
   printf "%s\n" "Commands:"
   printf "  %s   Generate bash completions\n" "completions"
-  printf "  %s   Generate subtitles for any kind of media file\n" "transcribe "
+  printf "  %s   Generate subtitles and transcriptions for any kind of media file\n" "transcribe "
   printf "  %s   Show the entire config file\n" "list       "
+  printf "  %s   Play a media file with generated subtitles / transcriptions\n" "play       "
   echo
 
   # :command.long_usage
@@ -98,11 +99,11 @@ shisper_completions_usage() {
 # :command.usage
 shisper_transcribe_usage() {
   if [[ -n $long_usage ]]; then
-    printf "shisper transcribe - Generate subtitles for any kind of media file\n"
+    printf "shisper transcribe - Generate subtitles and transcriptions for any kind of media file\n"
     echo
 
   else
-    printf "shisper transcribe - Generate subtitles for any kind of media file\n"
+    printf "shisper transcribe - Generate subtitles and transcriptions for any kind of media file\n"
     echo
 
   fi
@@ -165,6 +166,49 @@ shisper_list_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "--help, -h"
     printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+shisper_play_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "shisper play - Play a media file with generated subtitles / transcriptions\n"
+    echo
+
+  else
+    printf "shisper play - Play a media file with generated subtitles / transcriptions\n"
+    echo
+
+  fi
+
+  printf "%s\n" "Usage:"
+  printf "  shisper play MEDIA_FILE\n"
+  printf "  shisper play --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "Options:"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "--help, -h"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "Arguments:"
+
+    # :argument.usage
+    printf "  %s\n" "MEDIA_FILE"
+    printf "    Video or audio file\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "Examples:"
+    printf "  shisper play my_video.mkv\n"
+    printf "  shisper play my_audio.mp3\n"
     echo
 
   fi
@@ -395,6 +439,19 @@ extract_audio() {
 
 }
 
+play_media() {
+  local media_file="$1"
+
+  echo -e "[$(cyan_bold " INFO ")] Playing file with generated transcription ..."
+  echo -e "${media_file}"
+
+  mpv \
+    --sub-file="${media_file}".wav.srt \
+    "${media_file}" 2>/dev/null
+
+  echo -e "[$(green_bold "  OK  ")] Playback completed."
+}
+
 # src/lib/utils.sh
 #!/usr/bin/env bash
 
@@ -403,6 +460,15 @@ clean_temp_file() {
 
   echo -e "[$(cyan_bold " INFO ")] Deleting temporary wav files"
   rm "${media_file}.wav"
+}
+
+check_media() {
+  local media_file="$1"
+
+  if [[ ! -f "${media_file}" ]]; then
+    echo -e "[$(red_bold " FAILED ")] File not found"
+    exit 1
+  fi
 }
 
 check_models() {
@@ -416,6 +482,15 @@ check_models() {
     echo -e "[$(yellow_bold " WARN ")] ${MODEL_PATH}/${model_file} is present"
   else
     download_model "${model_file}"
+  fi
+}
+
+check_srt() {
+  local media_file="$1"
+
+  if [[ ! -f "${media_file}.wav.srt" ]]; then
+    echo -e "[$(red_bold " FAILED ")] Generated transcription not found"
+    exit 1
   fi
 }
 
@@ -441,7 +516,7 @@ run_whisper() {
 
   echo -e "[$(green_bold " OK ")] Completed"
   echo -e "[$(cyan_bold " INFO ")] Generated transcription is:"
-  echo -e "${media_file}.srt"
+  echo -e "${media_file}.wav.srt"
 }
 
 # :command.command_functions
@@ -463,6 +538,7 @@ shisper_transcribe_command() {
   media_file="${args[media_file]}"
   model_file="ggml-$(config_get model).bin"
 
+  check_media "${media_file}"
   check_media_type "${media_file}"
   extract_audio "${media_file}"
   check_models "${model_file}"
@@ -482,6 +558,19 @@ shisper_list_command() {
     echo "$key === $(config_get "$key")"
   done
 
+}
+
+# :command.function
+shisper_play_command() {
+  # src/play_command.sh
+
+  #!/usr/bin/env bash
+
+  media_file="${args[media_file]}"
+
+  check_media "${media_file}"
+  check_srt "${media_file}"
+  play_media "${media_file}"
 }
 
 # :command.parse_requirements
@@ -542,6 +631,13 @@ parse_requirements() {
       action="list"
       shift
       shisper_list_parse_requirements "$@"
+      shift $#
+      ;;
+
+    play)
+      action="play"
+      shift
+      shisper_play_parse_requirements "$@"
       shift $#
       ;;
 
@@ -731,6 +827,64 @@ shisper_list_parse_requirements() {
 
 }
 
+# :command.parse_requirements
+shisper_play_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        shisper_play_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="play"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['media_file']+x} ]]; then
+
+          args['media_file']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_args_filter
+  if [[ -z ${args['media_file']+x} ]]; then
+    printf "missing required argument: MEDIA_FILE\nusage: shisper play MEDIA_FILE\n" >&2
+    exit 1
+  fi
+
+}
+
 # :command.initialize
 initialize() {
   version="0.1"
@@ -778,6 +932,15 @@ run() {
         shisper_list_usage
       else
         shisper_list_command
+      fi
+      ;;
+
+    "play")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        shisper_play_usage
+      else
+        shisper_play_command
       fi
       ;;
 

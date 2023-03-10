@@ -1,5 +1,5 @@
 name: shisper
-help: A quick & dirty script to generate subs for your multimedia files.
+help: A quick & dirty script to generate subs and transcriptions for your multimedia files.
 version: 0.1
 
 environment_variables:
@@ -15,7 +15,7 @@ commands:
       Usage: eval "\$(shisper completions)"
 
   - name: transcribe
-    help: Generate subtitles for any kind of media file
+    help: Generate subtitles and transcriptions for any kind of media file
     args:
       - name: media_file
         required: true
@@ -28,3 +28,14 @@ commands:
   - name: list
     alias: l
     help: Show the entire config file
+
+  - name: play
+    help: Play a media file with generated subtitles / transcriptions
+    args:
+      - name: media_file
+        required: true
+        help: Video or audio file
+
+    examples:
+      - shisper play my_video.mkv
+      - shisper play my_audio.mp3

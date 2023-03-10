@@ -36,3 +36,16 @@ extract_audio() {
   echo -e "${media_file}.wav"
 
 }
+
+play_media() {
+  local media_file="$1"
+
+  echo -e "[$(cyan_bold " INFO ")] Playing file with generated transcription ..."
+  echo -e "${media_file}"
+
+  mpv \
+    --sub-file="${media_file}".wav.srt \
+    "${media_file}" 2>/dev/null
+
+  echo -e "[$(green_bold "  OK  ")] Playback completed."
+}

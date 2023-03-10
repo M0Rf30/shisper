@@ -19,5 +19,5 @@ run_whisper() {
 
   echo -e "[$(green_bold " OK ")] Completed"
   echo -e "[$(cyan_bold " INFO ")] Generated transcription is:"
-  echo -e "${media_file}.srt"
+  echo -e "${media_file}.wav.srt"
 }

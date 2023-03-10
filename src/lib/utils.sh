@@ -7,6 +7,15 @@ clean_temp_file() {
   rm "${media_file}.wav"
 }
 
+check_media() {
+  local media_file="$1"
+
+  if [[ ! -f "${media_file}" ]]; then
+    echo -e "[$(red_bold " FAILED ")] File not found"
+    exit 1
+  fi
+}
+
 check_models() {
   local model_file="$1"
 
@@ -18,5 +27,14 @@ check_models() {
     echo -e "[$(yellow_bold " WARN ")] ${MODEL_PATH}/${model_file} is present"
   else
     download_model "${model_file}"
+  fi
+}
+
+check_srt() {
+  local media_file="$1"
+
+  if [[ ! -f "${media_file}.wav.srt" ]]; then
+    echo -e "[$(red_bold " FAILED ")] Generated transcription not found"
+    exit 1
   fi
 }
