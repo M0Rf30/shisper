@@ -16,6 +16,13 @@ commands:
         required: true
         help: Video or audio file
 
+  - name: livestream
+    help: Play a livestream file with generated subtitles / transcriptions
+    args:
+      - name: media_file
+        required: true
+        help: Video or audio file
+
   - name: transcribe
     help: Generate subtitles and transcriptions for any kind of media file
     args:

@@ -10,12 +10,14 @@ download_model() {
 run_whisper() {
   local media_file="$1"
   local model_file="$2"
+  local lang="$3"
 
   whisper.cpp \
     -m "${MODEL_PATH}/${model_file}" \
     -f "${media_file}.wav" \
+    -l "${lang}" \
     --output-srt \
-    --print-progress >/dev/null
+    --no-timestamps >/dev/null
 
   echo -e "[$(green_bold " OK ")] Completed"
   echo -e "[$(cyan_bold " INFO ")] Generated transcription is:"

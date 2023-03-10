@@ -1,4 +1,3 @@
-
 #!/usr/bin/env bash
 
 media_file="${args[media_file]}"
