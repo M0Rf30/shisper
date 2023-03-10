@@ -7,5 +7,5 @@ run_whisper() {
     -m /home/gianluca/.local/share/whispercpp/ggml-base.en.bin \
     -f "${media_file}.wav" \
     --output-srt \
-    --print-progress > /dev/null
+    --print-progress >/dev/null
 }
