@@ -19,7 +19,7 @@ run_whisper() {
     --output-srt \
     --no-timestamps >/dev/null
 
-  echo -e "[$(green_bold " OK ")] Completed"
+  echo -e "[$(green_bold "  OK  ")] Completed"
   echo -e "[$(cyan_bold " INFO ")] Generated transcription is:"
   echo -e "${media_file}.wav.srt"
 }
