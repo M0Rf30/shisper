@@ -3,10 +3,6 @@ help: A quick & dirty script to generate subs for your multimedia files.
 version: 0.1
 
 environment_variables:
-  - name: storage
-    required: true
-    help: Set your storage home path
-    default: ${HOME}/.shisperrc
   - name: model_path
     required: true
     help: Set the model home path
@@ -19,7 +15,7 @@ commands:
       Usage: eval "\$(shisper completions)"
 
   - name: transcribe
-    help: Generate subtitles for any kind of media file 
+    help: Generate subtitles for any kind of media file
     args:
       - name: media_file
         required: true
@@ -28,3 +24,7 @@ commands:
     examples:
       - shisper transcribe my_video.mkv
       - shisper transcribe my_audio.mp3
+
+  - name: list
+    alias: l
+    help: Show the entire config file

@@ -25,7 +25,7 @@ extract_audio() {
   local media_file="$1"
 
   echo -e "[$(cyan_bold " INFO ")] Extracting main track as 16Khz wav from ..."
-  echo -e "[$(cyan_bold " INFO ")] ${media_file}"
+  echo -e "${media_file}"
 
   ffmpeg -y \
     -i "${media_file}" \
@@ -33,6 +33,6 @@ extract_audio() {
     "${media_file}.wav" 2>/dev/null
 
   echo -e "[$(green_bold "  OK  ")] Audio extraction completed. File is:"
-  echo -e "[$(cyan_bold " INFO ")] ${media_file}.wav"
+  echo -e "${media_file}.wav"
 
 }

@@ -36,6 +36,7 @@ shisper_usage() {
   printf "%s\n" "Commands:"
   printf "  %s   Generate bash completions\n" "completions"
   printf "  %s   Generate subtitles for any kind of media file\n" "transcribe "
+  printf "  %s   Show the entire config file\n" "list       "
   echo
 
   # :command.long_usage
@@ -52,12 +53,6 @@ shisper_usage() {
 
     # :command.usage_environment_variables
     printf "%s\n" "Environment Variables:"
-
-    # :environment_variable.usage
-    printf "  %s\n" "STORAGE (required)"
-    printf "    Set your storage home path\n"
-    printf "    Default: ${HOME}/.shisperrc\n"
-    echo
 
     # :environment_variable.usage
     printf "  %s\n" "MODEL_PATH (required)"
@@ -138,6 +133,38 @@ shisper_transcribe_usage() {
     printf "%s\n" "Examples:"
     printf "  shisper transcribe my_video.mkv\n"
     printf "  shisper transcribe my_audio.mp3\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+shisper_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "shisper list - Show the entire config file\n"
+    echo
+
+  else
+    printf "shisper list - Show the entire config file\n"
+    echo
+
+  fi
+
+  printf "Alias: l\n"
+  echo
+
+  printf "%s\n" "Usage:"
+  printf "  shisper list\n"
+  printf "  shisper list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "Options:"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "--help, -h"
+    printf "    Show this help\n"
     echo
 
   fi
@@ -228,6 +255,106 @@ blue_underlined() { print_in_color "\e[4;34m" "$*"; }
 magenta_underlined() { print_in_color "\e[4;35m" "$*"; }
 cyan_underlined() { print_in_color "\e[4;36m" "$*"; }
 
+# src/lib/config.sh
+config_init() {
+  if [[ ! -f "/etc/shisper/config.ini" ]]; then
+    CONFIG_FILE=${CONFIG_FILE:=${HOME}/.shisperrc}
+    [[ -f "$CONFIG_FILE" ]] || touch "$CONFIG_FILE"
+  else
+    CONFIG_FILE="/etc/shisper/config.ini"
+  fi
+}
+
+config_get() {
+  local key=$1
+  local regex="^$key *= *(.+)$"
+  local value=""
+
+  config_init
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [[ $line =~ $regex ]]; then
+      value="${BASH_REMATCH[1]}"
+      break
+    fi
+  done <"$CONFIG_FILE"
+
+  echo "$value"
+}
+
+config_set() {
+  local key=$1
+  shift
+  local value="$*"
+
+  config_init
+
+  local regex="^($key) *= *.+$"
+  local output=""
+  local found_key=""
+  local newline
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    newline=$line
+    if [[ $line =~ $regex ]]; then
+      found_key="${BASH_REMATCH[1]}"
+      newline="$key = $value"
+      output="$output$newline\n"
+    elif [[ $line ]]; then
+      output="$output$line\n"
+    fi
+  done <"$CONFIG_FILE"
+
+  if [[ -z $found_key ]]; then
+    output="$output$key = $value\n"
+  fi
+
+  printf "%b\n" "$output" >"$CONFIG_FILE"
+}
+
+config_del() {
+  local key=$1
+
+  local regex="^($key) *="
+  local output=""
+
+  config_init
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [[ $line ]] && [[ ! $line =~ $regex ]]; then
+      output="$output$line\n"
+    fi
+  done <"$CONFIG_FILE"
+
+  printf "%b\n" "$output" >"$CONFIG_FILE"
+}
+
+config_show() {
+  config_init
+  cat "$CONFIG_FILE"
+}
+
+config_keys() {
+  local regex="^([a-zA-Z0-9_\-\/\.]+) *="
+
+  config_init
+
+  local keys=()
+  local key
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [[ $line =~ $regex ]]; then
+      key="${BASH_REMATCH[1]}"
+      keys+=("$key")
+    fi
+  done <"$CONFIG_FILE"
+  echo "${keys[@]}"
+}
+
+config_has_key() {
+  [[ $(config_get "$1") ]]
+}
+
 # src/lib/media.sh
 #!/usr/bin/env bash
 
@@ -239,12 +366,9 @@ check_media_type() {
   media_type="${mime_type_stripped//;*/}"
 
   case "${media_type}" in
-  audio*)
-    ;;
-  video*)
-    ;;
-  stream*)
-    ;;
+  audio*) ;;
+  video*) ;;
+  stream*) ;;
   *)
     echo -e "[$(red_bold "FAILED")] File type not supported : ${media_type}"
     exit 1
@@ -259,7 +383,7 @@ extract_audio() {
   local media_file="$1"
 
   echo -e "[$(cyan_bold " INFO ")] Extracting main track as 16Khz wav from ..."
-  echo -e "[$(cyan_bold " INFO ")] ${media_file}"
+  echo -e "${media_file}"
 
   ffmpeg -y \
     -i "${media_file}" \
@@ -267,7 +391,7 @@ extract_audio() {
     "${media_file}.wav" 2>/dev/null
 
   echo -e "[$(green_bold "  OK  ")] Audio extraction completed. File is:"
-  echo -e "[$(cyan_bold " INFO ")] ${media_file}.wav"
+  echo -e "${media_file}.wav"
 
 }
 
@@ -281,17 +405,43 @@ clean_temp_file() {
   rm "${media_file}.wav"
 }
 
+check_models() {
+  local model_file="$1"
+
+  if [[ ! -d "${MODEL_PATH}" ]]; then
+    mkdir -p "${MODEL_PATH}"
+  fi
+
+  if [[ -f "${MODEL_PATH}/${model_file}" ]]; then
+    echo -e "[$(yellow_bold " WARN ")] ${MODEL_PATH}/${model_file} is present"
+  else
+    download_model "${model_file}"
+  fi
+}
+
 # src/lib/whisper.sh
 #!/usr/bin/env bash
+download_model() {
+  local model_file="$1"
+
+  echo -e "[$(cyan_bold " INFO ")] Downloading latest ${model_file} ..."
+  curl -# -L -C - "https://huggingface.co/datasets/ggerganov/whisper.cpp/resolve/main/${model_file}" \
+    -o "${MODEL_PATH}/${model_file}"
+}
 
 run_whisper() {
   local media_file="$1"
+  local model_file="$2"
 
   whisper.cpp \
-    -m /home/gianluca/.local/share/whispercpp/ggml-base.en.bin \
+    -m "${MODEL_PATH}/${model_file}" \
     -f "${media_file}.wav" \
     --output-srt \
-    --print-progress > /dev/null
+    --print-progress >/dev/null
+
+  echo -e "[$(green_bold " OK ")] Completed"
+  echo -e "[$(cyan_bold " INFO ")] Generated transcription is:"
+  echo -e "${media_file}.srt"
 }
 
 # :command.command_functions
@@ -311,11 +461,27 @@ shisper_transcribe_command() {
   #!/usr/bin/env bash
 
   media_file="${args[media_file]}"
+  model_file="ggml-$(config_get model).bin"
 
   check_media_type "${media_file}"
   extract_audio "${media_file}"
-  run_whisper "${media_file}"
+  check_models "${model_file}"
+  run_whisper "${media_file}" "${model_file}"
   clean_temp_file "${media_file}"
+
+}
+
+# :command.function
+shisper_list_command() {
+  # src/list_command.sh
+  # Using the standard library (lib/config.sh) to show the entire config file
+  config_show
+
+  # Or to iterate through keys
+  for key in $(config_keys); do
+    echo "$key === $(config_get "$key")"
+  done
+
 }
 
 # :command.parse_requirements
@@ -343,13 +509,8 @@ parse_requirements() {
 
   # :command.environment_variables_filter
   # :command.environment_variables_default
-  export STORAGE="${STORAGE:-${HOME}/.shisperrc}"
   export MODEL_PATH="${MODEL_PATH:-${HOME}/.local/share/whispercpp}"
 
-  if [[ -z "${STORAGE:-}" ]]; then
-    printf "missing required environment variable: STORAGE\n" >&2
-    exit 1
-  fi
   if [[ -z "${MODEL_PATH:-}" ]]; then
     printf "missing required environment variable: MODEL_PATH\n" >&2
     exit 1
@@ -374,6 +535,13 @@ parse_requirements() {
       action="transcribe"
       shift
       shisper_transcribe_parse_requirements "$@"
+      shift $#
+      ;;
+
+    list | l)
+      action="list"
+      shift
+      shisper_list_parse_requirements "$@"
       shift $#
       ;;
 
@@ -517,6 +685,52 @@ shisper_transcribe_parse_requirements() {
 
 }
 
+# :command.parse_requirements
+shisper_list_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        shisper_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
 # :command.initialize
 initialize() {
   version="0.1"
@@ -524,7 +738,6 @@ initialize() {
   set -e
 
   # :command.environment_variables_default
-  export STORAGE="${STORAGE:-${HOME}/.shisperrc}"
   export MODEL_PATH="${MODEL_PATH:-${HOME}/.local/share/whispercpp}"
 
   # src/initialize.sh
@@ -556,6 +769,15 @@ run() {
         shisper_transcribe_usage
       else
         shisper_transcribe_command
+      fi
+      ;;
+
+    "list")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        shisper_list_usage
+      else
+        shisper_list_command
       fi
       ;;
 
