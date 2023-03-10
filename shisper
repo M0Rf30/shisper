@@ -34,10 +34,10 @@ shisper_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "Commands:"
-  printf "  %s   Generate bash completions\n" "completions"
+  printf "  %s   Play a media file with generated subtitles / transcriptions\n" "play       "
   printf "  %s   Generate subtitles and transcriptions for any kind of media file\n" "transcribe "
   printf "  %s   Show the entire config file\n" "list       "
-  printf "  %s   Play a media file with generated subtitles / transcriptions\n" "play       "
+  printf "  %s   Generate bash completions\n" "completions"
   echo
 
   # :command.long_usage
@@ -65,23 +65,20 @@ shisper_usage() {
 }
 
 # :command.usage
-shisper_completions_usage() {
+shisper_play_usage() {
   if [[ -n $long_usage ]]; then
-    printf "shisper completions\n"
-    echo
-
-    printf "  Generate bash completions\n  Usage: eval \"\$(shisper completions)\"\n"
+    printf "shisper play - Play a media file with generated subtitles / transcriptions\n"
     echo
 
   else
-    printf "shisper completions - Generate bash completions\n"
+    printf "shisper play - Play a media file with generated subtitles / transcriptions\n"
     echo
 
   fi
 
   printf "%s\n" "Usage:"
-  printf "  shisper completions\n"
-  printf "  shisper completions --help | -h\n"
+  printf "  shisper play MEDIA_FILE\n"
+  printf "  shisper play --help | -h\n"
   echo
 
   # :command.long_usage
@@ -91,6 +88,14 @@ shisper_completions_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "--help, -h"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "Arguments:"
+
+    # :argument.usage
+    printf "  %s\n" "MEDIA_FILE"
+    printf "    Video or audio file\n"
     echo
 
   fi
@@ -172,20 +177,23 @@ shisper_list_usage() {
 }
 
 # :command.usage
-shisper_play_usage() {
+shisper_completions_usage() {
   if [[ -n $long_usage ]]; then
-    printf "shisper play - Play a media file with generated subtitles / transcriptions\n"
+    printf "shisper completions\n"
+    echo
+
+    printf "  Generate bash completions\n  Usage: eval \"\$(shisper completions)\"\n"
     echo
 
   else
-    printf "shisper play - Play a media file with generated subtitles / transcriptions\n"
+    printf "shisper completions - Generate bash completions\n"
     echo
 
   fi
 
   printf "%s\n" "Usage:"
-  printf "  shisper play MEDIA_FILE\n"
-  printf "  shisper play --help | -h\n"
+  printf "  shisper completions\n"
+  printf "  shisper completions --help | -h\n"
   echo
 
   # :command.long_usage
@@ -195,14 +203,6 @@ shisper_play_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "--help, -h"
     printf "    Show this help\n"
-    echo
-
-    # :command.usage_args
-    printf "%s\n" "Arguments:"
-
-    # :argument.usage
-    printf "  %s\n" "MEDIA_FILE"
-    printf "    Video or audio file\n"
     echo
 
     # :command.usage_examples
@@ -521,13 +521,16 @@ run_whisper() {
 
 # :command.command_functions
 # :command.function
-shisper_completions_command() {
-  # src/completions_command.sh
-  echo "# this file is located in 'src/completions_command.sh'"
-  echo "# code for 'shisper completions' goes here"
-  echo "# you can edit it freely and regenerate (it will not be overwritten)"
-  inspect_args
+shisper_play_command() {
+  # src/play_command.sh
 
+  #!/usr/bin/env bash
+
+  media_file="${args[media_file]}"
+
+  check_media "${media_file}"
+  check_srt "${media_file}"
+  play_media "${media_file}"
 }
 
 # :command.function
@@ -561,16 +564,13 @@ shisper_list_command() {
 }
 
 # :command.function
-shisper_play_command() {
-  # src/play_command.sh
+shisper_completions_command() {
+  # src/completions_command.sh
+  echo "# this file is located in 'src/completions_command.sh'"
+  echo "# code for 'shisper completions' goes here"
+  echo "# you can edit it freely and regenerate (it will not be overwritten)"
+  inspect_args
 
-  #!/usr/bin/env bash
-
-  media_file="${args[media_file]}"
-
-  check_media "${media_file}"
-  check_srt "${media_file}"
-  play_media "${media_file}"
 }
 
 # :command.parse_requirements
@@ -613,10 +613,10 @@ parse_requirements() {
   case $action in
     -*) ;;
 
-    completions)
-      action="completions"
+    play)
+      action="play"
       shift
-      shisper_completions_parse_requirements "$@"
+      shisper_play_parse_requirements "$@"
       shift $#
       ;;
 
@@ -634,10 +634,10 @@ parse_requirements() {
       shift $#
       ;;
 
-    play)
-      action="play"
+    completions)
+      action="completions"
       shift
-      shisper_play_parse_requirements "$@"
+      shisper_completions_parse_requirements "$@"
       shift $#
       ;;
 
@@ -678,13 +678,13 @@ parse_requirements() {
 }
 
 # :command.parse_requirements
-shisper_completions_parse_requirements() {
+shisper_play_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        shisper_completions_usage
+        shisper_play_usage
         exit
         ;;
 
@@ -698,7 +698,7 @@ shisper_completions_parse_requirements() {
   # :command.dependencies_filter
 
   # :command.command_filter
-  action="completions"
+  action="play"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -713,13 +713,25 @@ shisper_completions_parse_requirements() {
       *)
         # :command.parse_requirements_case
         # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
+        if [[ -z ${args['media_file']+x} ]]; then
+
+          args['media_file']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
 
         ;;
 
     esac
   done
+
+  # :command.required_args_filter
+  if [[ -z ${args['media_file']+x} ]]; then
+    printf "missing required argument: MEDIA_FILE\nusage: shisper play MEDIA_FILE\n" >&2
+    exit 1
+  fi
 
 }
 
@@ -828,13 +840,13 @@ shisper_list_parse_requirements() {
 }
 
 # :command.parse_requirements
-shisper_play_parse_requirements() {
+shisper_completions_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        shisper_play_usage
+        shisper_completions_usage
         exit
         ;;
 
@@ -848,7 +860,7 @@ shisper_play_parse_requirements() {
   # :command.dependencies_filter
 
   # :command.command_filter
-  action="play"
+  action="completions"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -863,25 +875,13 @@ shisper_play_parse_requirements() {
       *)
         # :command.parse_requirements_case
         # :command.parse_requirements_case_simple
-        if [[ -z ${args['media_file']+x} ]]; then
-
-          args['media_file']=$1
-          shift
-        else
-          printf "invalid argument: %s\n" "$key" >&2
-          exit 1
-        fi
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
 
         ;;
 
     esac
   done
-
-  # :command.required_args_filter
-  if [[ -z ${args['media_file']+x} ]]; then
-    printf "missing required argument: MEDIA_FILE\nusage: shisper play MEDIA_FILE\n" >&2
-    exit 1
-  fi
 
 }
 
@@ -908,12 +908,12 @@ run() {
   parse_requirements "${input[@]}"
 
   case "$action" in
-    "completions")
+    "play")
       if [[ ${args['--help']:-} ]]; then
         long_usage=yes
-        shisper_completions_usage
+        shisper_play_usage
       else
-        shisper_completions_command
+        shisper_play_command
       fi
       ;;
 
@@ -935,12 +935,12 @@ run() {
       fi
       ;;
 
-    "play")
+    "completions")
       if [[ ${args['--help']:-} ]]; then
         long_usage=yes
-        shisper_play_usage
+        shisper_completions_usage
       else
-        shisper_play_command
+        shisper_completions_command
       fi
       ;;
 

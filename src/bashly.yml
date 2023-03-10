@@ -9,10 +9,12 @@ environment_variables:
     default: ${HOME}/.local/share/whispercpp
 
 commands:
-  - name: completions
-    help: |-
-      Generate bash completions
-      Usage: eval "\$(shisper completions)"
+  - name: play
+    help: Play a media file with generated subtitles / transcriptions
+    args:
+      - name: media_file
+        required: true
+        help: Video or audio file
 
   - name: transcribe
     help: Generate subtitles and transcriptions for any kind of media file
@@ -29,12 +31,10 @@ commands:
     alias: l
     help: Show the entire config file
 
-  - name: play
-    help: Play a media file with generated subtitles / transcriptions
-    args:
-      - name: media_file
-        required: true
-        help: Video or audio file
+  - name: completions
+    help: |-
+      Generate bash completions
+      Usage: eval "\$(shisper completions)"
 
     examples:
       - shisper play my_video.mkv
