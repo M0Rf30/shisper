@@ -31,13 +31,9 @@ and follow the help guidelines
 
 ### For Arch Linux users
 
-You can find sim-on-pi on AUR
+You can find shisper on AUR
 
 Type:
-
-`yay -S shisper`
-
-or
 
 `yay -S shisper-git`
 

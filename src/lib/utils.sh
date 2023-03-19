@@ -4,7 +4,7 @@ clean_temp_file() {
   local media_file="$1"
 
   echo -e "[$(cyan_bold " INFO ")] Deleting temporary wav files"
-  rm "${media_file}.wav"
+  rm "${media_file%%.*}"
 }
 
 check_media() {
@@ -33,7 +33,7 @@ check_models() {
 check_srt() {
   local media_file="$1"
 
-  if [[ ! -f "${media_file}.wav.srt" ]]; then
+  if [[ ! -f "${media_file%%.*}.srt" ]]; then
     echo -e "[$(red_bold " FAILED ")] Generated transcription not found"
     exit 1
   fi

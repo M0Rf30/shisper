@@ -35,6 +35,7 @@ shisper_usage() {
   # :command.usage_commands
   printf "%s\n" "Commands:"
   printf "  %s   Play a media file with generated subtitles / transcriptions\n" "play       "
+  printf "  %s   Generate subtitles / transcriptions using your audio inputs\n" "stream     "
   printf "  %s   Generate subtitles and transcriptions for any kind of media file\n" "transcribe "
   printf "  %s   Show the entire config file\n" "list       "
   printf "  %s   Generate bash completions\n" "completions"
@@ -96,6 +97,35 @@ shisper_play_usage() {
     # :argument.usage
     printf "  %s\n" "MEDIA_FILE"
     printf "    Video or audio file\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+shisper_stream_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "shisper stream - Generate subtitles / transcriptions using your audio inputs\n"
+    echo
+
+  else
+    printf "shisper stream - Generate subtitles / transcriptions using your audio inputs\n"
+    echo
+
+  fi
+
+  printf "%s\n" "Usage:"
+  printf "  shisper stream\n"
+  printf "  shisper stream --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "Options:"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "--help, -h"
+    printf "    Show this help\n"
     echo
 
   fi
@@ -412,7 +442,6 @@ check_media_type() {
   case "${media_type}" in
   audio*) ;;
   video*) ;;
-  stream*) ;;
   *)
     echo -e "[$(red_bold "FAILED")] File type not supported : ${media_type}"
     exit 1
@@ -430,12 +459,14 @@ extract_audio() {
   echo -e "${media_file}"
 
   ffmpeg -y \
+    -loglevel quiet \
     -i "${media_file}" \
     -acodec pcm_s16le -ac 1 -ar 16000 \
-    "${media_file}.wav" 2>/dev/null
+    -f wav \
+    "${media_file%%.*}"
 
   echo -e "[$(green_bold "  OK  ")] Audio extraction completed. File is:"
-  echo -e "${media_file}.wav"
+  echo -e "${media_file%%.*}"
 
 }
 
@@ -446,8 +477,9 @@ play_media() {
   echo -e "${media_file}"
 
   mpv \
-    --sub-file="${media_file}".wav.srt \
-    "${media_file}" 2>/dev/null
+    --quiet \
+    --sub-file="${media_file%%.*}.srt" \
+    "${media_file}" 1>/dev/null
 
   echo -e "[$(green_bold "  OK  ")] Playback completed."
 }
@@ -459,7 +491,7 @@ clean_temp_file() {
   local media_file="$1"
 
   echo -e "[$(cyan_bold " INFO ")] Deleting temporary wav files"
-  rm "${media_file}.wav"
+  rm "${media_file%%.*}"
 }
 
 check_media() {
@@ -488,7 +520,7 @@ check_models() {
 check_srt() {
   local media_file="$1"
 
-  if [[ ! -f "${media_file}.wav.srt" ]]; then
+  if [[ ! -f "${media_file%%.*}.srt" ]]; then
     echo -e "[$(red_bold " FAILED ")] Generated transcription not found"
     exit 1
   fi
@@ -507,23 +539,39 @@ download_model() {
 run_whisper() {
   local media_file="$1"
   local model_file="$2"
+  local lang="$3"
 
   whisper.cpp \
-    -m "${MODEL_PATH}/${model_file}" \
-    -f "${media_file}.wav" \
+    --file "${media_file%%.*}" \
+    --language "${lang}" \
+    --model "${MODEL_PATH}/${model_file}" \
     --output-srt \
-    --print-progress >/dev/null
+    --no-timestamps >/dev/null
 
-  echo -e "[$(green_bold " OK ")] Completed"
+  echo -e "[$(green_bold "  OK  ")] Completed"
   echo -e "[$(cyan_bold " INFO ")] Generated transcription is:"
-  echo -e "${media_file}.wav.srt"
+  echo -e "${media_file%%.*}.srt"
+}
+
+run_whisper_stream() {
+  local model_file="$1"
+  local lang="$2"
+
+  if [ "${lang}" == "auto" ]; then
+    lang="en"
+  fi
+
+  whisper.cpp-stream \
+    --language "${lang}" \
+    --model "${MODEL_PATH}/${model_file}"
+
+  echo -e "[$(green_bold "  OK  ")] Completed"
 }
 
 # :command.command_functions
 # :command.function
 shisper_play_command() {
   # src/play_command.sh
-
   #!/usr/bin/env bash
 
   media_file="${args[media_file]}"
@@ -534,18 +582,32 @@ shisper_play_command() {
 }
 
 # :command.function
+shisper_stream_command() {
+  # src/stream_command.sh
+  #!/usr/bin/env bash
+
+  model_file="ggml-$(config_get model).bin"
+  lang="$(config_get lang)"
+
+  check_models "${model_file}"
+  run_whisper_stream "${model_file}" "${lang}"
+
+}
+
+# :command.function
 shisper_transcribe_command() {
   # src/transcribe_command.sh
   #!/usr/bin/env bash
 
   media_file="${args[media_file]}"
   model_file="ggml-$(config_get model).bin"
+  lang="$(config_get lang)"
 
   check_media "${media_file}"
   check_media_type "${media_file}"
   extract_audio "${media_file}"
   check_models "${model_file}"
-  run_whisper "${media_file}" "${model_file}"
+  run_whisper "${media_file}" "${model_file}" "${lang}"
   clean_temp_file "${media_file}"
 
 }
@@ -617,6 +679,13 @@ parse_requirements() {
       action="play"
       shift
       shisper_play_parse_requirements "$@"
+      shift $#
+      ;;
+
+    stream)
+      action="stream"
+      shift
+      shisper_stream_parse_requirements "$@"
       shift $#
       ;;
 
@@ -732,6 +801,52 @@ shisper_play_parse_requirements() {
     printf "missing required argument: MEDIA_FILE\nusage: shisper play MEDIA_FILE\n" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+shisper_stream_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        shisper_stream_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="stream"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -887,7 +1002,7 @@ shisper_completions_parse_requirements() {
 
 # :command.initialize
 initialize() {
-  version="0.1"
+  version="0.2"
   long_usage=''
   set -e
 
@@ -895,6 +1010,8 @@ initialize() {
   export MODEL_PATH="${MODEL_PATH:-${HOME}/.local/share/whispercpp}"
 
   # src/initialize.sh
+  #!/usr/bin/env bash
+
   required_executables=(whisper.cpp ffmpeg mpv)
 
   check_requirements() {
@@ -927,6 +1044,15 @@ run() {
         shisper_play_usage
       else
         shisper_play_command
+      fi
+      ;;
+
+    "stream")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        shisper_stream_usage
+      else
+        shisper_stream_command
       fi
       ;;
 

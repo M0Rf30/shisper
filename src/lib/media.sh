@@ -10,7 +10,6 @@ check_media_type() {
   case "${media_type}" in
   audio*) ;;
   video*) ;;
-  stream*) ;;
   *)
     echo -e "[$(red_bold "FAILED")] File type not supported : ${media_type}"
     exit 1
@@ -28,12 +27,14 @@ extract_audio() {
   echo -e "${media_file}"
 
   ffmpeg -y \
+    -loglevel quiet \
     -i "${media_file}" \
     -acodec pcm_s16le -ac 1 -ar 16000 \
-    "${media_file}.wav" 2>/dev/null
+    -f wav \
+    "${media_file%%.*}"
 
   echo -e "[$(green_bold "  OK  ")] Audio extraction completed. File is:"
-  echo -e "${media_file}.wav"
+  echo -e "${media_file%%.*}"
 
 }
 
@@ -44,8 +45,9 @@ play_media() {
   echo -e "${media_file}"
 
   mpv \
-    --sub-file="${media_file}".wav.srt \
-    "${media_file}" 2>/dev/null
+    --quiet \
+    --sub-file="${media_file%%.*}.srt" \
+    "${media_file}" 1>/dev/null
 
   echo -e "[$(green_bold "  OK  ")] Playback completed."
 }
