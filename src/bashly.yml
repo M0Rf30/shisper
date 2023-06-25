@@ -1,13 +1,11 @@
 name: shisper
 help: A quick & dirty script to generate subs and transcriptions for your multimedia files.
-version: 0.2
-
+version: '0.2.1'
 environment_variables:
-  - name: model_path
+  - name: MODEL_PATH
     required: true
     help: Set the model home path
     default: ${HOME}/.local/share/whispercpp
-
 commands:
   - name: play
     help: Play a media file with generated subtitles / transcriptions
@@ -15,16 +13,30 @@ commands:
       - name: media_file
         required: true
         help: Video or audio file
+      - name: sub_format
+        required: false
+        default: srt
+        help: |-
+          Format for subtitles / transcription
+          Supported values
+          txt vtt srt lrc words csv json
 
   - name: stream
     help: Generate subtitles / transcriptions using your audio inputs
 
   - name: transcribe
-    help: Generate subtitles and transcriptions for any kind of media file
+    help: Generate subtitles / transcriptions for any kind of media file
     args:
       - name: media_file
         required: true
         help: Video or audio file
+      - name: sub_format
+        required: false
+        default: srt
+        help: |-
+          Format for subtitles / transcription
+          Supported values
+          txt vtt srt lrc words csv json
 
     examples:
       - shisper transcribe my_video.mkv

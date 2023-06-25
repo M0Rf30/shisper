@@ -40,13 +40,14 @@ extract_audio() {
 
 play_media() {
   local media_file="$1"
+  local sub_format="$2"
 
   echo -e "[$(cyan_bold " INFO ")] Playing file with generated transcription ..."
   echo -e "${media_file}"
 
   mpv \
     --quiet \
-    --sub-file="${media_file%%.*}.srt" \
+    --sub-file="${media_file%%.*}.${sub_format}" \
     "${media_file}" 1>/dev/null
 
   echo -e "[$(green_bold "  OK  ")] Playback completed."

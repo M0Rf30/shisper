@@ -30,10 +30,11 @@ check_models() {
   fi
 }
 
-check_srt() {
+check_sub() {
   local media_file="$1"
+  local sub_format="$2"
 
-  if [[ ! -f "${media_file%%.*}.srt" ]]; then
+  if [[ ! -f "${media_file%%.*}.${sub_format}" ]]; then
     echo -e "[$(red_bold " FAILED ")] Generated transcription not found"
     exit 1
   fi
