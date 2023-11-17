@@ -21,9 +21,6 @@ commands:
           Supported values
           txt vtt srt lrc words csv json
 
-  - name: stream
-    help: Generate subtitles / transcriptions using your audio inputs
-
   - name: transcribe
     help: Generate subtitles / transcriptions for any kind of media file
     args:

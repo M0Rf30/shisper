@@ -25,17 +25,3 @@ run_whisper() {
   echo -e "${media_file%%.*}.${sub_format}"
 }
 
-run_whisper_stream() {
-  local model_file="$1"
-  local lang="$2"
-
-  if [[ "${lang}" == "auto" ]]; then
-    lang="en"
-  fi
-
-  whisper.cpp-stream \
-    --language "${lang}" \
-    --model "${MODEL_PATH}/${model_file}"
-
-  echo -e "[$(green_bold "  OK  ")] Completed"
-}
