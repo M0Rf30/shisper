@@ -3,7 +3,7 @@ download_model() {
   local model_file="$1"
 
   echo -e "[$(cyan_bold " INFO ")] Downloading latest ${model_file} ..."
-  curl -# -L -C - "https://huggingface.co/datasets/ggerganov/whisper.cpp/resolve/main/${model_file}" \
+  curl -# -L -C - "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${model_file}" \
     -o "${MODEL_PATH}/${model_file}"
 }
 
@@ -24,4 +24,3 @@ run_whisper() {
   echo -e "[$(cyan_bold " INFO ")] Generated transcription is:"
   echo -e "${media_file%%.*}.${sub_format}"
 }
-
