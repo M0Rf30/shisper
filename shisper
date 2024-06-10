@@ -422,12 +422,12 @@ check_media_type() {
   media_type="${mime_type_stripped//;*/}"
 
   case "${media_type}" in
-  audio*) ;;
-  video*) ;;
-  *)
-    echo -e "[$(red_bold "FAILED")] File type not supported : ${media_type}"
-    exit 1
-    ;;
+    audio*) ;;
+    video*) ;;
+    *)
+      echo -e "[$(red_bold "FAILED")] File type not supported : ${media_type}"
+      exit 1
+      ;;
   esac
 
   echo -e "[$(green_bold "  OK  ")] File media type detected: ${media_type}"
@@ -445,10 +445,10 @@ extract_audio() {
     -i "${media_file}" \
     -acodec pcm_s16le -ac 1 -ar 16000 \
     -f wav \
-    "${media_file%%.*}"
+    "${media_file%.*}"
 
   echo -e "[$(green_bold "  OK  ")] Audio extraction completed. File is:"
-  echo -e "${media_file%%.*}"
+  echo -e "${media_file%.*}"
 
 }
 
@@ -461,7 +461,7 @@ play_media() {
 
   mpv \
     --quiet \
-    --sub-file="${media_file%%.*}.${sub_format}" \
+    --sub-file="${media_file%.*}.${sub_format}" \
     "${media_file}" 1>/dev/null
 
   echo -e "[$(green_bold "  OK  ")] Playback completed."
@@ -474,7 +474,7 @@ clean_temp_file() {
   local media_file="$1"
 
   echo -e "[$(cyan_bold " INFO ")] Deleting temporary wav files"
-  rm "${media_file%%.*}"
+  rm "${media_file%.*}"
 }
 
 check_media() {
@@ -504,7 +504,7 @@ check_sub() {
   local media_file="$1"
   local sub_format="$2"
 
-  if [[ ! -f "${media_file%%.*}.${sub_format}" ]]; then
+  if [[ ! -f "${media_file%.*}.${sub_format}" ]]; then
     echo -e "[$(red_bold " FAILED ")] Generated transcription not found"
     exit 1
   fi
@@ -523,11 +523,11 @@ download_model() {
 run_whisper() {
   local media_file="$1"
   local model_file="$2"
-  local lang="$3"
+  local lang="${3:-auto}"
   local sub_format="$4"
 
   whisper.cpp \
-    --file "${media_file%%.*}" \
+    --file "${media_file%.*}" \
     --language "${lang}" \
     --model "${MODEL_PATH}/${model_file}" \
     --output-"${sub_format}" \
@@ -535,7 +535,7 @@ run_whisper() {
 
   echo -e "[$(green_bold "  OK  ")] Completed"
   echo -e "[$(cyan_bold " INFO ")] Generated transcription is:"
-  echo -e "${media_file%%.*}.${sub_format}"
+  echo -e "${media_file%.*}.${sub_format}"
 }
 
 # :command.command_functions
