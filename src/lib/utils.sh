@@ -17,16 +17,16 @@ check_media() {
 }
 
 check_models() {
-  local model_file="$1"
+  local model="$1"
 
   if [[ ! -d "${MODEL_PATH}" ]]; then
     mkdir -p "${MODEL_PATH}"
   fi
 
-  if [[ -f "${MODEL_PATH}/${model_file}" ]]; then
-    echo -e "[$(yellow_bold " WARN ")] ${MODEL_PATH}/${model_file} is present"
+  if [[ -f "${MODEL_PATH}/ggml-${model}.bin" ]]; then
+    echo -e "[$(yellow_bold " WARN ")] ${MODEL_PATH}/ggml-${model}.bin is present"
   else
-    download_model "${model_file}"
+    download_model "${model}"
   fi
 }
 

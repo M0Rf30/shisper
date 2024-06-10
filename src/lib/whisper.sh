@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 download_model() {
-  local model_file="$1"
+  local model="$1"
 
-  echo -e "[$(cyan_bold " INFO ")] Downloading latest ${model_file} ..."
-  curl -# -L -C - "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/${model_file}" \
-    -o "${MODEL_PATH}/${model_file}"
+  echo -e "[$(cyan_bold " INFO ")] Downloading latest ggml-${model}.bin ..."
+  curl -# -L -C - "https://ggml.ggerganov.com/ggml-model-whisper-${model}.bin" \
+    -o "${MODEL_PATH}/ggml-${model}.bin"
 }
 
 run_whisper() {
@@ -16,7 +16,7 @@ run_whisper() {
   whisper.cpp \
     --file "${media_file%.*}" \
     --language "${lang}" \
-    --model "${MODEL_PATH}/${model_file}" \
+    --model "${MODEL_PATH}/ggml-${model}.bin" \
     --output-"${sub_format}" \
     --no-timestamps >/dev/null
 
