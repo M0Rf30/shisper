@@ -932,7 +932,7 @@ shisper_completions_parse_requirements() {
 
 # :command.initialize
 initialize() {
-  version="0.2.1"
+  version="0.2.3"
   long_usage=''
   set -e
 
