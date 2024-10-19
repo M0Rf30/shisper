@@ -16,7 +16,7 @@ run_whisper() {
   whisper.cpp \
     --file "${media_file%.*}" \
     --language "${lang}" \
-    --model "${MODEL_PATH}/ggml-${model}.bin" \
+    --model "${MODEL_PATH}/ggml-${model_file}.bin" \
     --output-"${sub_format}" \
     --no-timestamps >/dev/null
 

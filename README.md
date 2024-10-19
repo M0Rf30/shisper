@@ -8,13 +8,6 @@ A quick & dirty script to generate subs for your multimedia files.
 
 ## Instructions
 
-### Settings
-
-You can customize the script behaviour, editing the config file under:
-
-- `/etc/shisper/config.ini`
-- `${HOME}/.shisperrc`
-
 ### Required runtime dependencies
 
 - [whisper.cpp](https://github.com/ggerganov/whisper.cpp)

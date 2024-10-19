@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
-
-lang="$(config_get lang)"
 media_file="${args[media_file]}"
-model="$(config_get model)"
-# sub_format="$(config_get sub_format)"
-sub_format="${args[sub_format]}"
+lang="${args[--lang]}"
+model="${args[--model]}"
+sub_format="${args[--format]}"
 
 check_media "${media_file}"
 check_media_type "${media_file}"

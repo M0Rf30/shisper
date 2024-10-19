@@ -12,13 +12,17 @@ commands:
       - name: media_file
         required: true
         help: Video or audio file
-      - name: sub_format
+    flags:
+      - long: --format
+        short: -f
+        arg: format
         required: false
         default: srt
         help: |-
           Format for subtitles / transcription
-          Supported values
-          txt vtt srt lrc words csv json
+
+          Supported values:
+          txt vtt srt lrc words csv json json-full
 
   - name: transcribe
     help: Generate subtitles / transcriptions for any kind of media file
@@ -26,16 +30,38 @@ commands:
       - name: media_file
         required: true
         help: Video or audio file
-      - name: sub_format
+    flags:
+      - long: --format
+        short: -f
+        arg: format
         required: false
         default: srt
         help: |-
           Format for subtitles / transcription
-          Supported values
+
+          Supported values:
           txt vtt srt lrc words csv json
+      - long: --lang
+        short: -l
+        arg: lang
+        required: false
+        default: auto
+        help: |-
+          Spoken language ('auto' for auto-detect)
+      - long: --model
+        short: -m
+        arg: model
+        required: false
+        default: tiny
+        help: |-
+          Whisper models converted in ggml format
+
+          Supported values:
+            tiny tiny.en base base.en small small.en medium medium.en large-v1 large-v2 large
+            note: large corresponds to the latest Large v3 model
 
     examples:
-      - shisper transcribe my_video.mkv
+      - shisper transcribe --model large my_video.mkv
       - shisper transcribe my_audio.mp3
 
   - name: list
