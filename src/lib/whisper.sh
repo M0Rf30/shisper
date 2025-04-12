@@ -13,7 +13,7 @@ run_whisper() {
   local lang="${3:-auto}"
   local sub_format="$4"
 
-  whisper.cpp \
+  whisper-cli \
     --file "${media_file%.*}" \
     --language "${lang}" \
     --model "${MODEL_PATH}/ggml-${model_file}.bin" \

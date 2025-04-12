@@ -6,7 +6,7 @@
 ## CONFIG_FILE=settings.ini
 ##
 ## Feel free to empty (but not delete) this file.
-required_executables=(whisper.cpp ffmpeg mpv)
+required_executables=(whisper-cli ffmpeg mpv)
 
 check_requirements() {
   for executable in "${required_executables[@]}"; do

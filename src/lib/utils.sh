@@ -26,7 +26,7 @@ check_models() {
   if [[ -f "${MODEL_PATH}/ggml-${model_file}.bin" ]]; then
     echo -e "[$(cyan_bold " INFO ")] ${MODEL_PATH}/ggml-${model_file}.bin is present"
   else
-    download_model_file "${model_file}"
+    download_model "${model_file}"
   fi
 }
 
