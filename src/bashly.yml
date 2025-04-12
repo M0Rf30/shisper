@@ -1,6 +1,6 @@
 name: shisper
 help: A quick & dirty script to generate subs and transcriptions for your multimedia files.
-version: "0.2.4"
+version: "0.2.5"
 environment_variables:
   - name: MODEL_PATH
     help: Set the model home path
