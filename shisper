@@ -764,7 +764,7 @@ shisper_completions_parse_requirements() {
 
 # :command.initialize
 initialize() {
-  declare -g version="0.2.5"
+  declare -g version="0.2.6"
   set -e
 
   # :command.environment_variables_default
