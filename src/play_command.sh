@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 media_file="${args[media_file]}"
-sub_format="${args[sub_format]}"
+sub_format="${args[--format]}"
 
 check_media "${media_file}"
 check_sub "${media_file}" "${sub_format}"

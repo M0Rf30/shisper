@@ -64,10 +64,6 @@ commands:
       - shisper transcribe --model large my_video.mkv
       - shisper transcribe my_audio.mp3
 
-  - name: list
-    alias: l
-    help: Show the entire config file
-
   - name: completions
     help: |-
       Generate bash completions
