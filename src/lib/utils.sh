@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 clean_temp_file() {
   local media_file="$1"
 

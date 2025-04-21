@@ -274,8 +274,6 @@ magenta_underlined() { print_in_color "\e[4;35m" "$*"; }
 cyan_underlined() { print_in_color "\e[4;36m" "$*"; }
 
 # src/lib/media.sh
-#!/usr/bin/env bash
-
 check_media_type() {
   local media_file="$1"
 
@@ -330,8 +328,6 @@ play_media() {
 }
 
 # src/lib/utils.sh
-#!/usr/bin/env bash
-
 clean_temp_file() {
   local media_file="$1"
 
@@ -373,7 +369,6 @@ check_sub() {
 }
 
 # src/lib/whisper.sh
-#!/usr/bin/env bash
 download_model() {
   local model="$1"
 
@@ -405,8 +400,6 @@ run_whisper() {
 shisper_play_command() {
 
   # src/play_command.sh
-  #!/usr/bin/env bash
-
   media_file="${args[media_file]}"
   sub_format="${args[--format]}"
 
@@ -420,7 +413,6 @@ shisper_play_command() {
 shisper_transcribe_command() {
 
   # src/transcribe_command.sh
-  #!/usr/bin/env bash
   media_file="${args[media_file]}"
   lang="${args[--lang]}"
   model="${args[--model]}"
@@ -439,9 +431,6 @@ shisper_transcribe_command() {
 shisper_completions_command() {
 
   # src/completions_command.sh
-  echo "# this file is located in 'src/completions_command.sh'"
-  echo "# code for 'shisper completions' goes here"
-  echo "# you can edit it freely and regenerate (it will not be overwritten)"
   inspect_args
 
 }
@@ -771,8 +760,6 @@ initialize() {
   export MODEL_PATH="${MODEL_PATH:-${HOME}/.local/share/whispercpp}"
 
   # src/initialize.sh
-  #!/usr/bin/env bash
-
   required_executables=(whisper-cli ffmpeg mpv)
 
   check_requirements() {

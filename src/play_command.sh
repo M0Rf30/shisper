@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 media_file="${args[media_file]}"
 sub_format="${args[--format]}"
 

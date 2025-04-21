@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 download_model() {
   local model="$1"
 

@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 check_media_type() {
   local media_file="$1"
 
