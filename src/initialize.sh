@@ -1,4 +1,4 @@
-required_executables=(whisper-cli ffmpeg mpv)
+required_executables=(whisper-cli ffmpeg mpv curl file)
 
 check_requirements() {
   for executable in "${required_executables[@]}"; do

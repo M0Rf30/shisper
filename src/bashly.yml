@@ -55,9 +55,11 @@ commands:
         default: tiny
         help: |-
           Whisper models converted in ggml format
+          (downloaded from huggingface.co/ggerganov/whisper.cpp)
 
           Supported values:
-            tiny tiny.en base base.en small small.en medium medium.en large-v1 large-v2 large
+            tiny tiny.en base base.en small small.en medium medium.en
+            large-v1 large-v2 large-v3 large-v3-turbo large
             note: large corresponds to the latest Large v3 model
 
     examples:

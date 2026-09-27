@@ -1,9 +1,19 @@
+MODEL_URL="https://huggingface.co/ggerganov/whisper.cpp/resolve/main"
+
 download_model() {
   local model="$1"
+  local dest="${MODEL_PATH}/ggml-${model}.bin"
 
-  echo -e "[$(cyan_bold " INFO ")] Downloading latest ggml-${model}.bin ..."
-  curl -# -L -C - "https://ggml.ggerganov.com/ggml-model-whisper-${model}.bin" \
-    -o "${MODEL_PATH}/ggml-${model}.bin"
+  echo -e "[$(cyan_bold " INFO ")] Downloading ggml-${model}.bin ..."
+  if ! curl -# -f -L -C - "${MODEL_URL}/ggml-${model}.bin" -o "${dest}.part"; then
+    echo -e "[$(red_bold " FAILED ")] Unable to download ggml-${model}.bin"
+    exit 1
+  fi
+  mv "${dest}.part" "${dest}"
+}
+
+is_valid_model() {
+  [[ "$(head -c 4 "$1" 2>/dev/null)" == "lmgg" ]]
 }
 
 run_whisper() {

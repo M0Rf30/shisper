@@ -21,8 +21,15 @@ check_models() {
     mkdir -p "${MODEL_PATH}"
   fi
 
-  if [[ -f "${MODEL_PATH}/ggml-${model_file}.bin" ]]; then
-    echo -e "[$(cyan_bold " INFO ")] ${MODEL_PATH}/ggml-${model_file}.bin is present"
+  local model="${MODEL_PATH}/ggml-${model_file}.bin"
+
+  if [[ -f "${model}" ]] && ! is_valid_model "${model}"; then
+    echo -e "[$(yellow_bold " WARN ")] ${model} is not a valid ggml model, removing it"
+    rm -f "${model}"
+  fi
+
+  if [[ -f "${model}" ]]; then
+    echo -e "[$(cyan_bold " INFO ")] ${model} is present"
   else
     download_model "${model_file}"
   fi
